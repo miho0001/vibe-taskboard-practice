@@ -137,3 +137,114 @@ test.describe('タスクボード', () => {
     await expect(page.getByLabel('タスク名')).toBeVisible()
   })
 })
+
+/**
+ * スマホ幅での表示崩れを防ぐためのテスト。
+ *
+ * 横スクロールは「どこか 1 要素が画面幅を超えている」ときに起きるので、
+ * ページ全体の scrollWidth が画面幅を超えていないことを見張れば足りる。
+ */
+test.describe('スマホ幅での表示', () => {
+  // iPhone の代表的な論理解像度。Issue の完了条件に合わせて 375px で確認する
+  test.use({ viewport: { width: 375, height: 812 } })
+
+  test.beforeEach(async ({ page }) => {
+    // Given: スマホ幅でトップページを開いている
+    await page.goto('/')
+  })
+
+  /**
+   * テスト用のタスクを localStorage に流し込んでから開き直す。
+   *
+   * 画面から 1 件ずつ追加すると時間がかかるうえ、
+   * 「折り返しにくい長いタイトル」を入力する手間が本題からずれるため。
+   *
+   * @param page Playwright のページ
+   * @param titles 用意したいタスクのタイトル
+   */
+  async function seedTasks(page: import('@playwright/test').Page, titles: string[]) {
+    await page.evaluate((list) => {
+      localStorage.setItem(
+        'vibe-taskboard:tasks',
+        JSON.stringify(
+          list.map((title, index) => ({
+            id: `seed-${index}`,
+            title,
+            done: false,
+            createdAt: '2026-01-01T00:00:00.000Z',
+          })),
+        ),
+      )
+    }, titles)
+    await page.reload()
+  }
+
+  /**
+   * ページ全体が画面幅に収まっているかを調べる。
+   *
+   * @param page Playwright のページ
+   * @returns 中身の幅（scrollWidth）と画面の幅（clientWidth）
+   */
+  async function measureWidth(page: import('@playwright/test').Page) {
+    return page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }))
+  }
+
+  test('タスクが無いときは横スクロールが出ない', async ({ page }) => {
+    // When: 幅 375px で開く
+    const { scrollWidth, clientWidth } = await measureWidth(page)
+
+    // Then: 中身が画面幅に収まっている
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
+  })
+
+  test('折り返しにくい長いタイトルがあっても横スクロールが出ない', async ({ page }) => {
+    // Given: 空白が無く途中で折り返せないタイトルのタスクがある（横はみ出しの典型例）
+    await seedTasks(page, [
+      'https://example.com/very/long/path/that/never/breaks/anywhere/at/all',
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      '現地調査の日程を関係者全員と調整してから先方に連絡する',
+    ])
+
+    // When: 幅を測る
+    const { scrollWidth, clientWidth } = await measureWidth(page)
+
+    // Then: 中身が画面幅に収まっている
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
+  })
+
+  test('長いタイトルでも編集・削除ボタンが画面内に収まっている', async ({ page }) => {
+    // Given: 長いタイトルのタスクが 1 件ある
+    const title = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    await seedTasks(page, [title])
+
+    // Then: ボタンが画面外に押し出されていない
+    await expect(page.getByRole('button', { name: `${title} を編集` })).toBeInViewport()
+    await expect(page.getByRole('button', { name: `${title} を削除` })).toBeInViewport()
+  })
+
+  test('編集中でも入力欄とボタンが画面内に収まっている', async ({ page }) => {
+    // Given: 長いタイトルのタスクを編集し始めている
+    const title = 'https://example.com/very/long/path/that/never/breaks/anywhere/at/all'
+    await seedTasks(page, [title])
+    await page.getByRole('button', { name: `${title} を編集` }).click()
+
+    // Then: 横スクロールは出ず、入力欄も両方のボタンも画面内にある
+    const { scrollWidth, clientWidth } = await measureWidth(page)
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
+    await expect(page.getByLabel('タスク名を編集')).toBeInViewport()
+    await expect(page.getByRole('button', { name: '保存' })).toBeInViewport()
+    await expect(page.getByRole('button', { name: 'キャンセル' })).toBeInViewport()
+  })
+
+  test('追加フォームと絞り込みボタンが画面内に収まっている', async ({ page }) => {
+    // Then: 画面上部の操作系もはみ出していない
+    await expect(page.getByLabel('タスク名')).toBeInViewport()
+    await expect(page.getByRole('button', { name: '追加' })).toBeInViewport()
+    for (const name of ['すべて', '未完了', '完了']) {
+      await expect(page.getByRole('button', { name, exact: true })).toBeInViewport()
+    }
+  })
+})
