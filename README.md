@@ -11,6 +11,15 @@
 
 **[未経験から「案件に入れる」までのバイブコーディング入門](https://naogify.github.io/vibe-taskboard-practice/)**
 
+## 動くアプリを見る
+
+このリポジトリの main にマージされた内容が、GitHub Pages に自動で公開されます。
+
+**[タスクボード（このリポジトリの公開版）](https://miho0001.github.io/vibe-taskboard-practice/app/)**
+
+- 公開は `.github/workflows/pages.yml` が行う（`site/` をトップ、`npm run build` の結果を `/app/` に配置）
+- タスクはブラウザの localStorage に保存されるため、公開版で試した内容が他の人に見えることはない
+
 ## はじめる（受講生）
 
 **自分専用の環境をこの1行で用意できます。** 中で何をしているかは覚えなくて大丈夫です。
