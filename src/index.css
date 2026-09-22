@@ -34,6 +34,7 @@ h1 {
 
 .form input {
   flex: 1;
+  min-width: 0;
   padding: 0.55rem 0.7rem;
   border: 1px solid #cbd2d9;
   border-radius: 6px;
@@ -53,6 +54,8 @@ button {
   background: #2563eb;
   border-color: #2563eb;
   color: #fff;
+  flex: none;
+  white-space: nowrap;
 }
 
 /* エラー文は赤字で目立たせる */
@@ -64,6 +67,7 @@ button {
 
 .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin: 1.1rem 0 0.6rem;
 }
@@ -101,6 +105,20 @@ button {
   align-items: center;
   gap: 0.55rem;
   cursor: pointer;
+  /* flex の子は既定で「中身より小さくならない」。min-width: 0 で縮めるようにしないと、
+     長いタイトルが行を押し広げてボタンを画面外に追い出してしまう */
+  min-width: 0;
+}
+
+/* チェックボックスはタイトルが長くても潰さない */
+.list label input[type='checkbox'] {
+  flex: none;
+}
+
+/* 長いタイトルは折り返す。空白のない文字列（URL や連続した英数字）も
+   途中で折り返させないと、1 単語がそのまま横スクロールの原因になる */
+.list label span {
+  overflow-wrap: anywhere;
 }
 
 /* 完了したタスクは打ち消し線でグレーにする */
@@ -113,6 +131,12 @@ button {
 .actions {
   display: flex;
   gap: 0.4rem;
+  /* 縮むとラベルが「編／集」のように 1 文字ずつ折り返されてしまうので固定する */
+  flex: none;
+}
+
+.actions button {
+  white-space: nowrap;
 }
 
 /* 編集中の行はフォームだけを横幅いっぱいに置く */
@@ -120,12 +144,30 @@ button {
   display: flex;
   gap: 0.4rem;
   width: 100%;
+  min-width: 0;
+}
+
+.edit-form button {
+  flex: none;
+  white-space: nowrap;
 }
 
 .edit-form input {
+  /* min-width: 0 を添えて、入力欄の既定幅より狭い画面でもはみ出さないようにする */
   flex: 1;
+  min-width: 0;
   padding: 0.5rem 0.65rem;
   border: 1px solid #cbd2d9;
   border-radius: 6px;
   font-size: 1rem;
+}
+
+/* スマホ幅（〜480px）の調整。
+   デスクトップと同じ余白のままだと、375px では中身に使える幅が 319px しか残らず窮屈になる */
+@media (max-width: 480px) {
+  .app {
+    /* 画面の端にカードが貼り付かないよう、上下の余白を詰めて左右に少し空ける */
+    margin: 1rem 0.75rem;
+    padding: 1.25rem;
+  }
 }
