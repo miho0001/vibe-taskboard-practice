@@ -44,4 +44,48 @@ test.describe('タスクボード', () => {
     await expect(page.getByRole('alert')).toHaveText('タイトルを入力してください')
     await expect(page.getByText('未完了: 0 件')).toBeVisible()
   })
+
+  test('追加したタスクはリロードしても残り、完了状態も保たれる', async ({ page }) => {
+    // Given: タスクを 2 件追加し、片方を完了にしている
+    await page.getByLabel('タスク名').fill('資料をまとめる')
+    await page.getByRole('button', { name: '追加' }).click()
+    await page.getByLabel('タスク名').fill('請求書を送る')
+    await page.getByRole('button', { name: '追加' }).click()
+    await page.getByRole('checkbox').first().check()
+
+    // When: ブラウザをリロードする
+    await page.reload()
+
+    // Then: 2 件とも残り、完了状態と未完了件数も元のまま
+    await expect(page.getByText('資料をまとめる')).toBeVisible()
+    await expect(page.getByText('請求書を送る')).toBeVisible()
+    await expect(page.getByRole('checkbox').first()).toBeChecked()
+    await expect(page.getByText('未完了: 1 件')).toBeVisible()
+  })
+
+  test('削除したタスクはリロード後も消えたままになる', async ({ page }) => {
+    // Given: タスクが 1 件ある
+    await page.getByLabel('タスク名').fill('不要になったタスク')
+    await page.getByRole('button', { name: '追加' }).click()
+
+    // When: 削除してからリロードする
+    await page.getByRole('button', { name: '不要になったタスク を削除' }).click()
+    await page.reload()
+
+    // Then: 復活せず、空の案内が出たまま
+    await expect(page.getByText('不要になったタスク')).toBeHidden()
+    await expect(page.getByText('タスクがありません')).toBeVisible()
+  })
+
+  test('保存データが壊れていても空の一覧で起動する', async ({ page }) => {
+    // Given: localStorage に JSON として読めない値が入っている
+    await page.evaluate(() => localStorage.setItem('vibe-taskboard:tasks', '壊れたデータ'))
+
+    // When: 開き直す
+    await page.reload()
+
+    // Then: 画面が真っ白にならず、空の一覧として使い始められる
+    await expect(page.getByText('タスクがありません')).toBeVisible()
+    await expect(page.getByLabel('タスク名')).toBeVisible()
+  })
 })

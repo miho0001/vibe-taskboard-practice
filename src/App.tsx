@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { loadTasks, saveTasks } from './lib/storage'
 import {
   countActive,
   createTask,
@@ -17,10 +18,18 @@ import {
  */
 export default function App() {
   // 画面が持つ状態は「タスク一覧」「入力中の文字」「絞り込み条件」「エラー文」の 4 つだけ
-  const [tasks, setTasks] = useState<Task[]>([])
+  // タスク一覧の初期値は localStorage から復元する。
+  // 関数を渡す形にすると初回レンダリング時だけ実行されるので、毎回読み直さずに済む
+  const [tasks, setTasks] = useState<Task[]>(() => loadTasks())
   const [draft, setDraft] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [error, setError] = useState('')
+
+  // タスク一覧が変わるたびに保存する。
+  // 追加・完了・削除それぞれに保存処理を書くと書き漏らすので、1 箇所にまとめている
+  useEffect(() => {
+    saveTasks(tasks)
+  }, [tasks])
 
   /**
    * 追加フォームが送信されたときの処理。
