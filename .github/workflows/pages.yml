@@ -1,0 +1,47 @@
+# 受講生向けガイド（site/）を GitHub Pages に公開する。
+#
+# 公開先: https://naogify.github.io/vibe-taskboard-practice/
+#
+# 有効にする条件（初回だけ、リポジトリ管理者の手作業）:
+#   Settings > Pages > Build and deployment > Source を "GitHub Actions" にする
+name: Deploy Pages
+
+on:
+  push:
+    branches: [main]
+    # ガイドと、このワークフロー自身を変えたときだけ動かす
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# deploy-pages が OIDC でトークンを取るため id-token が必要
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 公開は1本ずつ。走っているものは止めない（途中で止めると公開内容が壊れうるため）
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: ガイドの公開
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      # site/ をそのまま配信する（ビルド不要の静的 HTML）
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

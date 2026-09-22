@@ -1,0 +1,46 @@
+# PR が作られる・更新されるたびに、型チェック・ユニットテスト・E2E を自動実行する。
+# ここが緑になっていることが「レビューを依頼していい状態」の最低ラインになる。
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: 型チェックとテスト
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # package.json の engines に依存しないよう Node のバージョンを固定する
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # package-lock.json のとおりに入れる（ローカルと同じ依存関係を再現するため）
+      - run: npm ci
+
+      - name: 型チェック
+        run: npm run typecheck
+
+      - name: ユニットテスト
+        run: npm test
+
+      # E2E はブラウザ本体が必要なので、CI では毎回インストールする
+      - name: ブラウザのインストール
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E テスト
+        run: npm run test:e2e
+
+      # 失敗したときだけレポートを残す（原因調査用）
+      - name: E2E レポートの保存
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

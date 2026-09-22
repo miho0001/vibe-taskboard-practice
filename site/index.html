@@ -1,0 +1,1002 @@
+<!doctype html><html lang="ja"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><title>未経験から「案件に入れる」までのバイブコーディング入門</title><link rel="icon" href="data:image/svg+xml,<svg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2032%2032%27><rect%20width=%2732%27%20height=%2732%27%20rx=%277%27%20fill=%27%231f4fd8%27/><path%20d=%27M9%2016.5l4.7%204.7L23%2011.6%27%20fill=%27none%27%20stroke=%27%23fff%27%20stroke-width=%273.2%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27/></svg>"><meta name="description" content="プログラミング未経験の人が Claude Code を使って開発案件を手伝えるようになるまでの手順書。"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<style>
+:root {
+  color-scheme: light;
+  --ground: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #eef2f9;
+  --ink: #161d27;
+  --ink-soft: #3d4756;
+  --muted: #66717f;
+  --rule: #dde3ec;
+  --accent: #1f4fd8;
+  --accent-soft: #e6ecfc;
+  --warn: #a4550a;
+  --warn-soft: #fdf3e6;
+  --shadow: 0 1px 2px rgba(16, 26, 40, .05), 0 12px 32px rgba(16, 26, 40, .07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #0f1319;
+    --surface: #161b23;
+    --surface-2: #1c222c;
+    --ink: #e7ebf2;
+    --ink-soft: #c3cad6;
+    --muted: #98a2b0;
+    --rule: #2a323e;
+    --accent: #8aa9ff;
+    --accent-soft: #1b2436;
+    --warn: #e6b165;
+    --warn-soft: #2a2116;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 14px 34px rgba(0, 0, 0, .35);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0f1319;
+  --surface: #161b23;
+  --surface-2: #1c222c;
+  --ink: #e7ebf2;
+  --ink-soft: #c3cad6;
+  --muted: #98a2b0;
+  --rule: #2a323e;
+  --accent: #8aa9ff;
+  --accent-soft: #1b2436;
+  --warn: #e6b165;
+  --warn-soft: #2a2116;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 14px 34px rgba(0, 0, 0, .35);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.95;
+  letter-spacing: .01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 読み進み具合を示す細いバー */
+#progress {
+  position: fixed; inset: 0 auto auto 0; height: 3px; width: 0;
+  background: var(--accent); z-index: 10;
+}
+
+.page {
+  max-width: 53rem;
+  margin: 0 auto;
+  padding: 4.5rem 1.5rem 7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+/* 本文の読みやすい幅。画像や表・コードはもっと広く使う */
+.page > p, .page > ul, .page > ol, .page > blockquote, .page > h2, .page > h3, .page > h4 {
+  max-width: 41rem;
+  width: 100%;
+  align-self: center;
+  margin: 0;
+}
+
+h1, h2, h3 {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  text-wrap: balance;
+  letter-spacing: .02em;
+}
+
+h1 { font-size: 2rem; line-height: 1.5; margin: 0; }
+.page > h1 {
+  align-self: center; max-width: 41rem; width: 100%;
+  margin-top: 2.5rem; padding-top: 2.2rem;
+  border-top: 1px solid var(--rule);
+}
+.page > h1:first-child { border-top: 0; margin-top: 0; padding-top: 0; font-size: 2.4rem; }
+h2 { font-size: 1.45rem; margin-top: 2rem !important; line-height: 1.6; }
+h3 { font-size: 1.15rem; margin-top: 1.4rem !important; color: var(--ink-soft); }
+
+p { color: var(--ink-soft); }
+strong { color: var(--ink); font-weight: 700; }
+a { color: var(--accent); text-underline-offset: 3px; }
+
+hr {
+  align-self: center; width: 100%; max-width: 41rem;
+  border: 0; border-top: 1px solid var(--rule); margin: 1.2rem 0;
+}
+
+ul, ol { padding-left: 1.4rem; color: var(--ink-soft); }
+li { margin: .3rem 0; }
+li::marker { color: var(--muted); }
+
+/* 引用は「重要ポイント」の枠として使っている */
+blockquote {
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 10px 10px 0;
+  padding: 1.1rem 1.4rem;
+  box-shadow: var(--shadow);
+}
+blockquote > :first-child { margin-top: 0; }
+blockquote h3 { margin-top: .2rem !important; font-family: inherit; font-size: 1.02rem; color: var(--ink); }
+
+img {
+  display: block;
+  width: 100%;
+  max-width: 46rem;
+  align-self: center;
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow);
+  background: var(--surface);
+  cursor: zoom-in;
+}
+
+/* クリックで等倍表示するオーバーレイ */
+#zoom {
+  position: fixed; inset: 0; z-index: 50; display: none;
+  background: rgba(9, 13, 20, .92); padding: 1.5rem;
+  overflow: auto; cursor: zoom-out;
+}
+#zoom.on { display: grid; place-items: center; }
+#zoom img {
+  max-width: 100%; width: auto; height: auto;
+  border-radius: 8px; border: 0; box-shadow: 0 20px 60px rgba(0,0,0,.5); cursor: zoom-out;
+}
+#zoom .hint {
+  position: fixed; top: 1rem; right: 1.2rem; color: #c9d2df; font-size: .8rem;
+  background: rgba(0,0,0,.45); padding: .3rem .7rem; border-radius: 99px;
+}
+
+/* 表は横スクロールできる箱に入れる */
+table {
+  align-self: center; width: 100%; max-width: 46rem;
+  border-collapse: collapse; font-size: .92rem; line-height: 1.7;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+  overflow: hidden; box-shadow: var(--shadow);
+}
+th, td { text-align: left; padding: .7rem .9rem; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-soft); }
+th { background: var(--surface-2); color: var(--muted); font-size: .78rem; letter-spacing: .06em; font-weight: 700; }
+tr:last-child td { border-bottom: 0; }
+
+code {
+  font-family: "SFMono-Regular", Menlo, monospace;
+  font-size: .88em;
+  background: var(--accent-soft);
+  color: var(--ink);
+  padding: .12em .4em;
+  border-radius: 4px;
+}
+
+pre {
+  align-self: center; width: 100%; max-width: 46rem;
+  background: #161b23; color: #dfe4ec;
+  border-radius: 10px; padding: 1.05rem 1.2rem;
+  overflow-x: auto; box-shadow: var(--shadow);
+  font-size: .85rem; line-height: 1.7;
+}
+pre code { background: none; color: inherit; padding: 0; font-size: 1em; }
+
+/* まだ撮影していないスクリーンショットの枠 */
+.shot {
+  align-self: center; width: 100%; max-width: 46rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: .55rem;
+  border: 1px dashed var(--accent); background: var(--accent-soft);
+  border-radius: 10px; padding: .85rem 1.1rem; font-size: .86rem; color: var(--ink-soft);
+}
+.shot-label { font-weight: 700; color: var(--accent); }
+.shot-file { margin-left: auto; background: transparent; color: var(--muted); font-size: .8rem; }
+
+@media (max-width: 640px) {
+  body { font-size: 15px; line-height: 1.85; }
+  .page { padding: 2.5rem 1rem 4rem; }
+  .page > h1:first-of-type { font-size: 1.8rem; }
+}
+</style>
+<div id="progress"></div>
+<main class="page"><h1 id="_1">未経験から「案件に入れる」までのバイブコーディング入門</h1>
+<p>プログラミング未経験の人が、AI（Claude Code）を使って開発案件を手伝えるようになるまでの手順書です。</p>
+<p><strong>ゴール</strong>：仕事を1件受け取って、直して、確認して、提出する。この1周を自分で回せるようになること。</p>
+<p><strong>やらないこと</strong>：文法の勉強、設計の理論、AI なしでコードを書く練習。今は要りません。</p>
+<hr />
+<h1 id="0">0. まず、何を作るのかを見る</h1>
+<p>手順から入ると「言われたとおりに手を動かしただけ」で終わります。先に完成形を見てください。</p>
+<h2 id="0-1">0-1 今回いじるアプリ</h2>
+<p><img alt="今回いじるタスク管理アプリ" src="assets/01.png" /></p>
+<p>やることを登録して、終わったらチェックを入れるだけのアプリです。実際に動いています。</p>
+<p><strong>→ <a href="https://vibe-taskboard-practice.pages.dev">vibe-taskboard-practice.pages.dev</a></strong></p>
+<p>いま開いて、タスクを2〜3件登録してみてください。<strong>そのままブラウザをリロードしてみてください。</strong></p>
+<h2 id="0-2">0-2 今回頼まれた改修</h2>
+<p>リロードすると、登録したタスクが全部消えたはずです。これが今回の依頼です。</p>
+<p><img alt="改修のビフォーとアフター" src="assets/02.png" /></p>
+<blockquote>
+<p><strong>クライアントからの依頼</strong>
+「入力したタスクが、ブラウザを閉じたり更新したりすると全部消えてしまいます。残るようにしてください。」</p>
+</blockquote>
+<p><strong>この「左 → 右」を実現して提出するまでが、今回やることです。</strong></p>
+<h2 id="0-3">0-3 何が起きているのか、どう直すのか</h2>
+<p>先に方針だけ共有しておきます。<strong>理解しなくても進めますが、知っておくと指示の意味が分かります。</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>今の状態</strong></td>
+<td>入力したタスクを、画面を表示している間だけ覚えている。ブラウザを閉じると忘れる</td>
+</tr>
+<tr>
+<td><strong>原因</strong></td>
+<td>「どこにも書き残していない」から。メモを取らずに暗記しているのと同じ</td>
+</tr>
+<tr>
+<td><strong>対応方針</strong></td>
+<td>ブラウザ自身が持っている保存場所に書き残し、次に開いたときに読み戻す</td>
+</tr>
+</tbody>
+</table>
+<p>原因の特定も実装も、<strong>AI がやります</strong>。あなたがやるのは次の2つです。</p>
+<ol>
+<li><strong>「何ができたら完了か」を押さえる</strong>（＝依頼に書かれた完了条件を読む）</li>
+<li><strong>本当にそうなったかを自分の手で確認する</strong>（＝プレビューでリロードしてみる）</li>
+</ol>
+<h2 id="0-4">0-4 ここから先の流れ</h2>
+<p><img alt="仕事の全体像" src="assets/03.png" /></p>
+<p>言葉を1つも知らなくても、形は分かるはずです。<strong>この記事は、この5つを1周するためだけの記事</strong>です。</p>
+<p>新しい言葉は、必要になった場所で1つずつ出てきます。今は覚えなくて大丈夫です。</p>
+<hr />
+<h1 id="1">1. 準備（おまじない）</h1>
+<p>ここは<strong>理解しなくていい章</strong>です。コマンドを貼って、最後に確認するだけ。1回やれば二度とやりません。</p>
+<p><img alt="入れる道具は5つ" src="assets/04.png" /></p>
+<h2 id="1-1">1-1 ターミナルを開く</h2>
+<p><code>⌘</code> + <code>Space</code> を押す → <code>ターミナル</code> と打つ → <code>return</code>。</p>
+<p>黒い（または白い）文字だけの窓が出ます。以下、この窓に貼り付けます。</p>
+<blockquote>
+<p>記事のコマンドの行頭に <code>$</code> がある場合、<strong><code>$</code> は打ちません</strong>。その後ろをコピーします。</p>
+</blockquote>
+<h2 id="1-2">1-2 貼るだけ（おまじない）</h2>
+<p>上から順に、1つずつ貼って <code>return</code>。</p>
+<pre><code class="language-bash"># 1つ目（5〜10分かかります。パスワードを聞かれたら Mac のログインパスワードを入力。画面に文字は出ません）
+/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
+</code></pre>
+<pre><code class="language-bash"># 2つ目（M1〜M4 の Mac で必要）
+echo 'eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;' &gt;&gt; ~/.zprofile
+eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;
+</code></pre>
+<pre><code class="language-bash"># 3つ目
+brew install git gh node
+</code></pre>
+<pre><code class="language-bash"># 4つ目
+npm install -g @anthropic-ai/claude-code
+</code></pre>
+<h2 id="1-3">1-3 入ったか確認する（ここだけ大事）</h2>
+<pre><code class="language-bash">brew --version
+node -v
+npm -v
+git --version
+gh --version
+claude --version
+</code></pre>
+<p>数字が6回返ってくれば完了です。</p>
+<p><img alt="インストールの確認" src="assets/05.png" /></p>
+<p><strong><code>command not found</code> と出たら</strong>：その行のインストールをもう一度実行。それでも出たら、エラー文をそのままコピーして人に送ってください。</p>
+<h2 id="1-4-windows">1-4 Windows の人（おまじない）</h2>
+<p>Windows のままでは同じコマンドが動きません。中に Linux を用意します。</p>
+<ol>
+<li>スタートメニューで「PowerShell」を検索 → <strong>右クリック → 管理者として実行</strong></li>
+<li><code>wsl --install</code> を実行 → 再起動</li>
+<li>スタートメニューの「Ubuntu」を起動 → ユーザー名とパスワードを決める</li>
+<li>以降は<strong>この Ubuntu の窓</strong>で、1-2 と同じことをします</li>
+</ol>
+<p>ファイルは Linux 側のホーム（<code>~/</code>）に置いてください。Windows 側（<code>/mnt/c/...</code>）に置くと極端に遅くなります。</p>
+<hr />
+<h1 id="2">2. ターミナルとフォルダの話</h1>
+<p>さっき開いた黒い窓を <strong>ターミナル</strong> と呼びます。</p>
+<p><strong>ターミナルは、マウスでやっている操作を、全部文字でやるための窓</strong>です。
+フォルダを開く・中身を見る・アプリを起動する。Finder でクリックしてやっていることを、名前を打って指示します。</p>
+<p>見た目が地味なだけで、特別なことは何もしていません。</p>
+<h2 id="2-1">2-1 パソコンの中身は、フォルダの入れ子</h2>
+<p>パソコンの中は、フォルダ（＝<strong>ディレクトリ</strong>とも言います）が入れ子になっているだけです。
+ターミナルでやることは、<strong>その入れ子のどこかに移動して、中を見る</strong>、これだけです。</p>
+<p><img alt="パソコンの中身はフォルダの入れ子" src="assets/06.png" /></p>
+<p><code>~</code>（チルダ）は「自分のホームフォルダ」の省略記号です。<code>~/work</code> と書いたら「ホームの中の work フォルダ」という意味になります。</p>
+<h2 id="2-2">2-2 画面の読み方</h2>
+<p><img alt="ターミナルの読み方" src="assets/07.png" /></p>
+<h2 id="2-3-3">2-3 覚える命令は3つ</h2>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pwd</code></td>
+<td>今どこにいる？</td>
+</tr>
+<tr>
+<td><code>ls</code></td>
+<td>ここに何がある？</td>
+</tr>
+<tr>
+<td><code>cd 名前</code></td>
+<td>そこに移動する（<code>cd ..</code> で1つ戻る）</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="pwd / ls / cd の動き" src="assets/08.png" /></p>
+<p><strong>うまくいかない時の9割は「違う場所にいる」だけ</strong>です。<code>pwd</code> で今いる場所を確認してください。</p>
+<h2 id="2-4">2-4 キー操作</h2>
+<p><img alt="覚えるキー操作は4つ" src="assets/09.png" /></p>
+<hr />
+<h1 id="3-ai-claude-code">3. AI に頼む（Claude Code）</h1>
+<h2 id="3-1">3-1 作業用のフォルダを作って、そこで起動する</h2>
+<p>まず、案件のファイルを置く場所をホームの下に作ります。</p>
+<pre><code class="language-bash">mkdir -p ~/work &amp;&amp; cd ~/work
+</code></pre>
+<ul>
+<li><code>mkdir -p ~/work</code> … ホームの中に <code>work</code> フォルダを作る（すでにあれば何もしない）</li>
+<li><code>&amp;&amp;</code> … 「前のが成功したら、次を実行」</li>
+<li><code>cd ~/work</code> … 作った <code>work</code> に移動する</li>
+</ul>
+<p>今どこにいるか確認します。</p>
+<pre><code class="language-bash">pwd
+</code></pre>
+<p><code>/Users/あなたの名前/work</code> と出れば正解です。ここで AI を起動します。</p>
+<pre><code class="language-bash">claude
+</code></pre>
+<p><img alt="Claude Code の起動画面" src="assets/10.png" /></p>
+<p>起動画面に出ているフォルダ名が、今いる場所です。<strong>ここが違うと、AI は関係ないファイルを触り始めます。</strong></p>
+<h2 id="3-2">3-2 練習環境を作ってもらう</h2>
+<p>ここから先、<strong>コマンドは基本的に自分で打ちません。</strong> 日本語で頼めば、AI が実行します。</p>
+<p>最初の依頼はこれです。この2行をそのまま貼ってください。</p>
+<pre><code>練習環境を作ってください。
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/naogify/vibe-taskboard-practice/main/setup/setup-student.sh)
+</code></pre>
+<p>途中で GitHub のログイン画面が出たら、表示された8文字のコードをブラウザに貼って承認します（初回だけ）。
+あとは5〜10分ほど待つだけです。終わると、<strong>あなた専用の練習環境</strong>ができています。</p>
+<table>
+<thead>
+<tr>
+<th>できるもの</th>
+<th>中身</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>あなたのリポジトリ</td>
+<td><code>あなたの名前/vibe-taskboard-practice</code>（自分専用のコピー）</td>
+</tr>
+<tr>
+<td>あなたのボード</td>
+<td>未着手 / 作業中 / 完了 の3列に、依頼が3件並んだ状態</td>
+</tr>
+<tr>
+<td>手元のフォルダ</td>
+<td><code>~/work/vibe-taskboard-practice</code>（動かせる状態）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>何をしているかは覚えなくて大丈夫です。</strong> 他の受講生とぶつからないように、自分専用の場所を用意しているだけです。</p>
+<p>手元で動かして見たいときは、AI にこう頼みます。</p>
+<pre><code>ローカルで動かして、開く URL を教えてください。
+</code></pre>
+<p><code>http://localhost:5173</code> のような URL が返ってきます。</p>
+<blockquote>
+<p><strong><code>localhost</code> とは</strong>
+「自分のパソコンの中」という意味です。この URL は他の人には見えません。自分だけの確認用。</p>
+</blockquote>
+<p>止めたいときは、ターミナルで <code>control</code> + <code>C</code>。</p>
+<h2 id="3-3">3-3 話しかける</h2>
+<p>日本語で普通に頼みます。</p>
+<p><img alt="質問を入力する" src="assets/11.png" /></p>
+<p><code>return</code> で送ると、答えが返ってきます。</p>
+<p><img alt="回答が返ってくる" src="assets/12.png" /></p>
+<p>直してもらうと、<strong>どこをどう変えたか</strong>が表示されます。緑の <code>+</code> が付いた行が、追加された行です。</p>
+<p><img alt="ファイルを編集したときの差分表示" src="assets/13.png" /></p>
+<h2 id="3-4-3">3-4 覚える操作は3つ</h2>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文字を打って <code>return</code></td>
+<td>頼む</td>
+</tr>
+<tr>
+<td><code>Esc</code></td>
+<td><strong>止める</strong>（変な方向に走り出したら、すぐ押す）</td>
+</tr>
+<tr>
+<td><code>⌘</code> + <code>V</code></td>
+<td>貼り付け（エラー文はこれで渡す）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-5">3-5 頼み方は雑でいい</h2>
+<p><img alt="頼み方は、これで十分" src="assets/14.png" /></p>
+<p>「テストも書いて」「ドキュメントも直して」は、毎回言わなくて大丈夫です。
+<strong>プロジェクトのルール（<code>CLAUDE.md</code>）に書いてあり、AI は毎回それを読んでいます</strong>（第8章で作ります）。</p>
+<p>あなたが意識するのは1つだけです。</p>
+<blockquote>
+<p><strong>出てきたコードの良し悪しではなく、「頼んだことが全部できているか」を見る。</strong></p>
+</blockquote>
+<h2 id="3-6">3-6 やってはいけないこと</h2>
+<ul>
+<li>中身を見ずに「できました」と報告する</li>
+<li>エラー文を自分の言葉に要約して伝える（<strong>そのままコピペ</strong>が正解）</li>
+</ul>
+<hr />
+<h1 id="4">4. 言葉あわせ</h1>
+<p>ここから、現場で使われている呼び方が出てきます。<strong>新しい作業は増えません。0-4 で見た5つに名前が付くだけ</strong>です。</p>
+<p><img alt="現場では、こう呼ばれています" src="assets/15.png" /></p>
+<p>もう1つだけ。<strong>GitHub</strong> は、この仕組み全部が置いてある Web サービスです。「やることリスト」も「提出」も、ここでやり取りします。</p>
+<h2 id="github">GitHub のアカウントだけ用意しておく</h2>
+<ol>
+<li><a href="https://github.com/signup">github.com/signup</a> でアカウントを作る（<strong>ユーザー名は仕事で使われます。ふざけた名前にしない</strong>）</li>
+<li>2要素認証を設定する（GitHub では必須。スマホに認証アプリを入れて QR を読む）</li>
+</ol>
+<p><strong>ターミナルとの接続は、3-2 のスクリプトがやってくれます。</strong> 自分で <code>gh auth login</code> を打つ必要はありません。</p>
+<hr />
+<h1 id="5-1">5. 実演：1周やってみる</h1>
+<p>ここが本編です。0〜4章は、この章のための準備でした。</p>
+<p><img alt="1周でやること" src="assets/16.png" /></p>
+<p><strong>ブランチを切る・テストを書く・コミットする</strong>は AI の担当です。あなたの仕事は、<strong>受け取ること</strong>と<strong>確認すること</strong>です。</p>
+<h2 id="1_1">出てくるものは、全部この1件につながっている</h2>
+<p>この章では、依頼・カード・作業コピー・提出・プレビューと、いろいろな名前が出てきます。
+ただし<strong>指しているものは1つ</strong>です。ここを掴んでおくと迷子になりません。</p>
+<p><img alt="全部が1件につながっている" src="assets/17.png" /></p>
+<h2 id="step-1-issue">Step 1 依頼（Issue）を受け取る</h2>
+<p>3-2 で用意された<strong>あなたのボード</strong>には、依頼が3件、3つの列（未着手 / 作業中 / 完了）で並んでいます。</p>
+<p><img alt="あなたのボード" src="assets/18.png" /></p>
+<p>自分がやる1件を選び、<strong>担当を自分にして「作業中」に動かします</strong>（上の画像の #1 がその状態です）。カードを右にドラッグするだけです。</p>
+<p>これは事務作業ではなく、「今これを私がやっています」を全員に伝えるための行動です。やらないと、他の人と作業がぶつかります。</p>
+<p>依頼の一覧は、こう見えます。</p>
+<p><img alt="依頼（Issue）の一覧" src="assets/19.png" /></p>
+<p>選んだ依頼を開いて、<strong>完了条件</strong>を読みます。ここがこの後ずっと基準になります。</p>
+<p><img alt="依頼の中身" src="assets/20.png" /></p>
+<blockquote>
+<p><strong>完了条件が書いていなければ、始める前に聞いてください。</strong>
+「どうなったら完了ですか？」は、優秀な人の質問です。手を動かしてから聞くと、作り直しになります。</p>
+</blockquote>
+<h2 id="step-2-ai">Step 2 AI に直してもらう</h2>
+<p>さっきのフォルダで AI を起動して、伝えるのは1行です。</p>
+<pre><code class="language-bash">cd ~/work/vibe-taskboard-practice
+claude
+</code></pre>
+<pre><code>Issue #1 を読んで対応してください。
+</code></pre>
+<p>これだけで、AI は次を全部やります（<code>CLAUDE.md</code> にそう書いてあるからです）。</p>
+<ul>
+<li>依頼の内容を読む</li>
+<li>作業用のコピー（ブランチ）を作る</li>
+<li>直す</li>
+<li>テストを追加して、通るまで直す</li>
+<li>ドキュメントを更新する</li>
+</ul>
+<p>途中で違う方向に走り出したら <code>Esc</code> で止めて、「そうではなく、○○してほしい」と言い直します。</p>
+<p>終わったら、手元でも見ておきます。</p>
+<pre><code>ローカルで動かして、確認用の URL を教えてください。
+</code></pre>
+<h2 id="step-3-pr">Step 3 提出（PR）も作ってもらう</h2>
+<pre><code>PR を作ってください。
+</code></pre>
+<p>AI がコミットして、提出（PR）まで作り、URL を返します。<strong>その URL をブラウザで開いてください。ここからがあなたの仕事です。</strong></p>
+<h2 id="step-4-github">Step 4 GitHub で確認する</h2>
+<p><img alt="PR の画面" src="assets/21.png" /></p>
+<p><strong>① 自動チェックが緑か</strong></p>
+<p>「Checks」タブを開きます。緑のチェックが付いていれば OK です。</p>
+<p><img alt="自動チェックが緑" src="assets/22.png" /></p>
+<p>赤いときは、AI に一言。</p>
+<pre><code>CI が落ちています。ログを見て直してください。
+</code></pre>
+<p>止まった場所は、Actions の画面で確認できます。</p>
+<p><img alt="Actions の実行結果" src="assets/23.png" /></p>
+<p><strong>② 完了条件を満たしているか</strong></p>
+<p>依頼に書かれていた完了条件と、PR の内容を見比べます。足りなければ「◯◯が抜けています」と伝えるだけです。</p>
+<p><strong>③ 知らないファイルが混ざっていないか</strong></p>
+<p>「Files changed」タブを開いて、変更されたファイルの名前だけ見ます。<code>.env</code> や、頼んでいないファイルが入っていたら要注意です。</p>
+<p><img alt="PR の差分" src="assets/24.png" /></p>
+<h2 id="step-5">Step 5 プレビューで自分の手で確認する</h2>
+<p>整備されたプロジェクトでは、提出ごとに<strong>その変更だけを反映した確認用の URL</strong> が自動で作られ、PR にリンクが貼られます。</p>
+<p><img alt="PR に貼られたプレビュー URL" src="assets/25.png" /></p>
+<p>このリンクを開いて、完了条件を上から順に試します。</p>
+<p><img alt="プレビューでの確認" src="assets/26.png" /></p>
+<blockquote>
+<p><strong>ここを飛ばす人は、必ず事故を起こします。</strong>
+自動チェックが緑でも、画面が壊れていることはあります。機械が見ているのは「テストに書いてあること」だけです。</p>
+</blockquote>
+<h2 id="step-6">Step 6 レビューを依頼する</h2>
+<p><img alt="「お願いします」と言う前に、3つだけ" src="assets/27.png" /></p>
+<p>PR 画面の「Reviewers」で相手を指定し、ひとこと送ります。</p>
+<pre><code>Issue #1 の PR を出しました。確認お願いします 🙏
+https://github.com/naogify/vibe-taskboard-practice/pull/4
+
+・自動チェックは緑です
+・プレビューで、完了条件3つを確認しました
+・保存のタイミングだけ、これでいいか相談したいです
+</code></pre>
+<p><strong>「相談したい点」を1つ書く</strong>のがコツです。相手は見る場所が分かって助かります。</p>
+<p>このあとの取り込み（マージ）は、確認する側の仕事です。<strong>あなたの1周はここで終わりです。</strong></p>
+<p>指摘が来たら、その内容をそのまま AI に渡して直してもらい、また Step 4 に戻ります。</p>
+<hr />
+<h1 id="6">6. 報告のしかた</h1>
+<p>案件から外される理由は、技術力ではなく<strong>報告がないこと</strong>です。</p>
+<h2 id="15">詰まったとき（15分ルール）</h2>
+<p>15分考えて分からなかったら聞く。この形で送ります。</p>
+<pre><code>【やろうとしていること】Issue #1 の対応
+【やったこと】AI に PR を作ってもらった
+【起きたこと】CI が赤いままで、直し方が分からない
+（エラー文をそのまま貼る）
+【試したこと】AI に「直して」と2回頼んだが同じところで落ちる
+</code></pre>
+<p>エラー文は<strong>要約せずそのまま</strong>。これだけで返事の速度が変わります。</p>
+<h2 id="1_2">1日の終わり</h2>
+<pre><code>【今日】Issue #1 の対応、PR #4 を作成
+【状態】自動チェック緑・確認待ち
+【明日】指摘対応 → Issue #2 に着手
+【困っていること】特になし
+</code></pre>
+<h2 id="_2">言い換え表</h2>
+<table>
+<thead>
+<tr>
+<th>✕</th>
+<th>◯</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>できました！</td>
+<td>PR #4 出しました。チェック緑、プレビューで完了条件3つ確認済みです</td>
+</tr>
+<tr>
+<td>動きません</td>
+<td>CI が落ちています（エラー文貼付）</td>
+</tr>
+<tr>
+<td>（3日間なにも言わない）</td>
+<td>まだ調査中です。明日の午前に状況を共有します</td>
+</tr>
+<tr>
+<td>たぶん大丈夫だと思います</td>
+<td>ここは自信がないので、確認をお願いしたいです</td>
+</tr>
+</tbody>
+</table>
+<p><strong>分からないものを「分かりません」と言える人は伸びます。</strong> AI を使うと、自分が理解していないコードができます。それは普通のことで、隠すことだけが問題です。</p>
+<hr />
+<h1 id="7">7. うまくいかないとき</h1>
+<table>
+<thead>
+<tr>
+<th>症状</th>
+<th>原因</th>
+<th>対処</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>command not found</code></td>
+<td>入っていない</td>
+<td>1-2 のその行をやり直す</td>
+</tr>
+<tr>
+<td><code>no such file or directory</code></td>
+<td><strong>違う場所にいる</strong></td>
+<td><code>pwd</code> で確認 → <code>cd</code> で移動</td>
+</tr>
+<tr>
+<td><code>npm install</code> で止まる</td>
+<td>ネットワークか権限</td>
+<td>エラー文をそのまま AI に貼る</td>
+</tr>
+<tr>
+<td><code>Permission denied (publickey)</code></td>
+<td>GitHub とつながっていない</td>
+<td><code>gh auth login</code> をやり直す</td>
+</tr>
+<tr>
+<td>自動チェックが赤い</td>
+<td>実装かテストの不足</td>
+<td>AI に「CI が落ちています。直して」</td>
+</tr>
+<tr>
+<td>AI が変な方向に走る</td>
+<td>どれを指しているか曖昧</td>
+<td><code>Esc</code> → Issue 番号かファイル名を渡し直す</td>
+</tr>
+<tr>
+<td>画面が固まった</td>
+<td>何かが実行中</td>
+<td><code>control</code> + <code>C</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>共通の対処</strong>：エラー文をそのままコピーして AI に貼り、「どういう意味？どう直す？」と聞く。8割これで終わります。</p>
+<hr />
+<h1 id="8">8.【管理者向け】受け入れ側の準備</h1>
+<p>ここからは、未経験者を迎える側（PM・リード）向けです。<strong>本人の努力より、環境の整備で決まります。</strong></p>
+<p>前章までで未経験者が「1行頼むだけ」で済んでいたのは、以下が用意されているからです。</p>
+<h2 id="8-1-claudemd">8-1 CLAUDE.md を置く</h2>
+<p>リポジトリ直下に置くと、AI が毎回自動で読みます。新人に渡す説明書を AI にも渡す、という考え方です。</p>
+<pre><code class="language-markdown">### 1. コードを変更したら、必ずテストを追加・更新する
+- ロジックの変更 → ユニットテスト
+- 画面の振る舞いの変更 → コンポーネントテスト
+- 操作フローの変更 → E2E テスト（Given/When/Then で書く）
+- テストを書かずに「実装できました」と報告してはいけない
+
+### 2. コミット前にローカルで全部通す
+npm run typecheck / npm test / npm run test:e2e
+落ちたテストを削除・スキップして通すのは禁止
+
+### 3. 振る舞いが変わったら、同じ PR でドキュメントも直す
+- 仕様 → docs/spec.md / 手順・環境変数 → README.md
+
+### 4. コメントを日本語で書く（「なぜ」を書く）
+
+### 5. main で作業しない（feat/ + Issue番号でブランチを切る）
+
+### 6. 1 Issue = 1 ブランチ = 1 PR（頼まれていない変更を混ぜない）
+</code></pre>
+<p>E2E は Given / When / Then で書かせると、<strong>非エンジニアでも読める仕様書</strong>になります。</p>
+<pre><code class="language-typescript">test('リロードしてもタスクが残っている', async ({ page }) =&gt; {
+  // Given: タスクを1件追加している
+  await page.getByLabel('タスク名').fill('見積を送る')
+  await page.getByRole('button', { name: '追加' }).click()
+
+  // When: リロードする
+  await page.reload()
+
+  // Then: 残っている
+  await expect(page.getByText('見積を送る')).toBeVisible()
+})
+</code></pre>
+<h2 id="8-2">8-2 手順をスキルにする</h2>
+<p>毎回口で説明している手順は、<code>.claude/skills/create-pr/SKILL.md</code> に置けます。AI の中で <code>/create-pr</code> と打つだけで、その順番どおりに動きます。</p>
+<pre><code class="language-markdown">---
+name: create-pr
+description: テストを通してから Pull Request を作成する
+---
+
+1. git status / git diff で変更内容を確認（.env やデバッグコードが無いか）
+2. typecheck → test → test:e2e を全部通す（1つでも赤ければ PR は作らない）
+3. feat/&lt;Issue番号&gt;-&lt;内容&gt; でブランチを切る
+4. 変更ファイルを明示して commit（git add . は使わない）
+5. push → gh pr create（テンプレートに沿って記入）
+6. gh pr checks --watch で緑を確認
+7. PR の URL・確認したこと・プレビュー URL を報告する
+</code></pre>
+<p>未経験者が「PR を作って」の1行で済むのは、これがあるからです。</p>
+<h2 id="8-3-main">8-3 main を保護する</h2>
+<p>口で言っても守られません。GitHub 側で止めます。</p>
+<p><strong>Settings → Branches → Add branch protection rule</strong>（対象 <code>main</code>）</p>
+<table>
+<thead>
+<tr>
+<th>設定</th>
+<th>効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Require a pull request before merging</td>
+<td>直接の変更を禁止</td>
+</tr>
+<tr>
+<td>Require approvals（1人以上）</td>
+<td>無確認のマージを禁止</td>
+</tr>
+<tr>
+<td>Require status checks to pass</td>
+<td><strong>自動チェックが緑でないとマージ不可</strong></td>
+</tr>
+<tr>
+<td>Require conversation resolution</td>
+<td>指摘が未解決のままマージ不可</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-4-ci">8-4 自動チェック（CI）を置く</h2>
+<p><code>.github/workflows/ci.yml</code> を置くだけで、提出のたびに自動テストが走ります。</p>
+<pre><code class="language-yaml">name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  test:
+    name: 型チェックとテスト
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+</code></pre>
+<p>ここで付けたジョブ名（<code>型チェックとテスト</code>）を、8-3 の status checks に指定します。</p>
+<h2 id="8-5-cloudflare-pages">8-5 デプロイプレビューを用意する（Cloudflare Pages）</h2>
+<p><strong>未経験者を受け入れるなら、これが一番効きます。</strong> 「動くか」を口頭ではなく URL で確認できるようになります。</p>
+<p>この記事の練習用リポジトリも、Cloudflare Pages で動いています。</p>
+<ul>
+<li>本番（main）: https://vibe-taskboard-practice.pages.dev</li>
+<li>プレビュー（PR）: https://feat-1-persist-tasks.vibe-taskboard-practice.pages.dev</li>
+</ul>
+<p><strong>設定（5分）</strong></p>
+<ol>
+<li>Cloudflare ダッシュボード → Workers &amp; Pages → Create → Pages → <strong>Connect to Git</strong></li>
+<li>リポジトリを選ぶ</li>
+<li>ビルド設定：コマンド <code>npm run build</code> / 出力ディレクトリ <code>dist</code></li>
+<li>保存すると、以降 <strong>PR ごとにプレビュー URL が自動生成</strong>され、PR にコメントが付きます</li>
+</ol>
+<p>CLI から入れる場合（GitHub 連携なしで、Actions から流す構成）：</p>
+<pre><code class="language-yaml"># .github/workflows/preview.yml
+name: Deploy Preview
+on: pull_request
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci &amp;&amp; npm run build
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=&lt;プロジェクト名&gt; --branch=${{ github.head_ref }}
+</code></pre>
+<p>環境変数は Cloudflare 側の設定画面で入れ、<code>.env</code> はコミットしない（<code>.gitignore</code> に <code>.env</code> を入れる）。</p>
+<h2 id="8-6-11">8-6 受講生を増やす（1人1環境）</h2>
+<p>複数人に同時に練習させるなら、<strong>全員が同じリポジトリを触る形は避けてください。</strong> 取り合いになり、誰の PR か分からなくなります。</p>
+<p>練習用リポジトリには、<strong>受講生ごとに環境を丸ごと用意するスクリプト</strong>を入れてあります。受講生がやるのは、AI にこの2行を渡すことだけです。</p>
+<pre><code>練習環境を作ってください。
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/naogify/vibe-taskboard-practice/main/setup/setup-student.sh)
+</code></pre>
+<p>スクリプトが裏側でやること（受講生には説明不要）：</p>
+<table>
+<thead>
+<tr>
+<th>手順</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>道具が入っているか確認（git / gh / node / npm）</td>
+</tr>
+<tr>
+<td>2</td>
+<td>GitHub にログイン（ボード作成の権限もまとめて取得）</td>
+</tr>
+<tr>
+<td>3</td>
+<td>受講生のアカウントにリポジトリを複製（テンプレートから）</td>
+</tr>
+<tr>
+<td>4</td>
+<td>依頼（Issue）を <code>setup/issues/*.md</code> から作成</td>
+</tr>
+<tr>
+<td>5</td>
+<td>ボードを作り、カンバン表示（未着手 / 作業中 / 完了）にして依頼を並べる</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>main</code> を保護（PR 必須・自動チェック必須）</td>
+</tr>
+<tr>
+<td>7</td>
+<td>手元にコピーして <code>npm install</code> とテスト用ブラウザの導入</td>
+</tr>
+</tbody>
+</table>
+<p><strong>何度実行しても壊れません。</strong> すでにあるものは作り直さずに使います。</p>
+<h3 id="_3">講師の手元でやること</h3>
+<pre><code class="language-bash"># 全員の状況をまとめて見る（リポジトリ・依頼の数・ボード・PR・自動チェック）
+bash setup/check.sh alice bob carol
+
+# 依頼の内容を差し替える（次の受講生から反映）
+$EDITOR setup/issues/01-persist.md
+</code></pre>
+<h3 id="0_1">受講生の環境でも、レビュー承認は 0 件にする</h3>
+<p>ひとりで練習する以上、自分の PR を自分で承認できないと1周が終わりません。
+<strong>自動チェック（CI）必須は残したまま、承認だけ 0 件</strong>にしてあります。実務のチームでは 1 件以上に戻してください。</p>
+<h3 id="_4">プレビューも配りたい場合</h3>
+<p>Cloudflare の API トークンを渡して実行すると、受講生のリポジトリにシークレットが設定され、PR ごとにプレビュー URL がコメントされるようになります。</p>
+<pre><code class="language-bash">CLOUDFLARE_API_TOKEN=xxxxx CLOUDFLARE_ACCOUNT_ID=yyyyy \
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/naogify/vibe-taskboard-practice/main/setup/setup-student.sh)
+</code></pre>
+<p>トークンは Cloudflare ダッシュボード → My Profile → API Tokens → <strong>Cloudflare Pages: Edit</strong> の権限で作ります。
+渡さなくても練習は最後まで進められます（手元の <code>npm run dev</code> で確認できます）。</p>
+<h2 id="8-7-supabase-3">8-7 Supabase を使うときの3つの約束</h2>
+<p><strong>① RPC を使わない。テーブルへのクエリで書く</strong></p>
+<pre><code class="language-typescript">// ◯ クエリで書く
+const { data } = await supabase.from('tasks').select('id, title, done').eq('user_id', userId)
+
+// ✕ RPC（DB 側の関数を呼ぶ）
+const { data } = await supabase.rpc('get_user_tasks', { uid: userId })
+</code></pre>
+<p>理由：<strong>変更が PR の差分に出ないためレビューできない</strong>／型が自動生成されない／環境ごとに中身がズレる／未経験者が処理を追えない。どうしても必要な場合だけ、PR に理由を書かせて例外にします。</p>
+<p><strong>② テーブルを作ったら必ず RLS を有効にする</strong></p>
+<pre><code class="language-sql">alter table tasks enable row level security;
+
+create policy &quot;自分のタスクのみ参照可&quot; on tasks
+  for select using (auth.uid() = user_id);
+</code></pre>
+<p>RLS の有効化忘れは、実際に起きている情報漏洩の代表例です。レビュー項目に入れてください。</p>
+<p><strong>③ <code>service_role</code> キーをブラウザ側で使わせない</strong></p>
+<table>
+<thead>
+<tr>
+<th>キー</th>
+<th>使う場所</th>
+<th>漏れたら</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>anon</code></td>
+<td>ブラウザ側（公開前提）</td>
+<td>RLS があれば限定的</td>
+</tr>
+<tr>
+<td><code>service_role</code></td>
+<td><strong>サーバー側だけ</strong></td>
+<td><strong>全データが読み書きできる</strong></td>
+</tr>
+</tbody>
+</table>
+<p><code>NEXT_PUBLIC_</code> など、ブラウザに出る名前で <code>service_role</code> を設定していないか必ず確認します。</p>
+<hr />
+<h1 id="a-1">付録A 最初の1週間チェックリスト</h1>
+<ul>
+<li>[ ] <code>⌘</code> + <code>Space</code> でターミナルを起動できる</li>
+<li>[ ] <code>control</code> + <code>C</code> で止められる</li>
+<li>[ ] <code>brew</code> <code>git</code> <code>gh</code> <code>node</code> <code>npm</code> <code>claude</code> のバージョンが出る</li>
+<li>[ ] <code>pwd</code> <code>ls</code> <code>cd</code> で目的の場所に行ける</li>
+<li>[ ] <code>~/work</code> を作って、そこで <code>claude</code> を起動できた</li>
+<li>[ ] AI に頼んで、練習用アプリをローカルで動かせた</li>
+<li>[ ] 依頼（Issue）の完了条件を読んで、AI に対応してもらえた</li>
+<li>[ ] AI に PR を作ってもらえた</li>
+<li>[ ] PR 画面で自動チェックが緑になっているのを確認した</li>
+<li>[ ] プレビュー URL を開いて、完了条件を自分の手で確認した</li>
+<li>[ ] レビューを依頼できた</li>
+</ul>
+<p>全部チェックが付いたら、案件に入れます。</p>
+<h1 id="b">付録B 自分で打つコマンドはこれだけ</h1>
+<pre><code class="language-bash"># 迷ったら
+pwd                          # 今どこ？
+ls                           # 何がある？
+cd 名前                       # 移動（cd .. で1つ戻る）
+
+# 最初の1回（作業用フォルダを作って、AI を起動するだけ）
+mkdir -p ~/work &amp;&amp; cd ~/work
+claude
+
+# 毎回
+cd ~/work/vibe-taskboard-practice
+claude                       # ここから先は日本語で頼む
+
+# 困ったら
+control + C                  # 止める
+clear                        # 画面をきれいに
+</code></pre>
+<h1 id="c-ai">付録C AI への頼み文テンプレート</h1>
+<pre><code># 練習環境を作る（初回だけ）
+練習環境を作ってください。
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/naogify/vibe-taskboard-practice/main/setup/setup-student.sh)
+
+# 手元で動かして見る
+ローカルで動かして、開く URL を教えてください。
+
+# 依頼に対応する
+Issue #1 を読んで対応してください。
+
+# 提出する
+PR を作ってください。
+
+# 自動チェックが赤いとき
+CI が落ちています。ログを見て直してください。
+
+# 指摘に対応する
+レビューで次の指摘をもらいました。対応してください。
+（指摘をそのまま貼る）
+</code></pre>
+<h1 id="d-claudemd">付録D CLAUDE.md テンプレート</h1>
+<pre><code class="language-markdown"># CLAUDE.md
+
+## このプロジェクト
+- 何を作っているか:
+- 技術構成:
+- 置き場所の方針: （例: ロジックは src/lib、画面は src/App.tsx）
+
+## 守るルール
+1. コードを変更したら、必ずテストを追加・更新する（書かずに「できました」と言わない）
+2. コミット前に typecheck / test / test:e2e を全部通す（落ちたテストを消して通すのは禁止）
+3. 振る舞いが変わったら、同じ PR で docs/spec.md と README.md を直す
+4. 関数には日本語の doc コメント、迷う箇所には「なぜ」を書く
+5. main で作業しない。feat/&lt;Issue番号&gt;-&lt;内容&gt; でブランチを切る
+6. 1 Issue = 1 ブランチ = 1 PR。頼まれていない変更を混ぜない
+
+## データベース（Supabase）
+- テーブルへのアクセスはクエリで書く。RPC は原則使わない
+- テーブルを作ったら必ず RLS を有効にしてポリシーを書く
+- service_role キーはブラウザ側で使わない
+- マイグレーションは supabase/migrations/ に SQL で残す
+
+## 禁止
+- main への直接コミット / .env のコミット / テストの削除・skip
+- 変更 400 行を超える PR
+- 動作確認していないコードを「完成しました」と報告する
+</code></pre>
+<hr />
+<h1 id="_5">おわりに</h1>
+<p>必要なのは知識の量ではありません。</p>
+<ol>
+<li><strong>今どこにいるか分かる</strong>（<code>pwd</code> <code>ls</code> <code>cd</code>）</li>
+<li><strong>1周を順番どおり回せる</strong>（受け取る → 直してもらう → 提出してもらう → 確認する）</li>
+<li><strong>緑と完了条件とプレビューを確認してから「お願いします」と言える</strong></li>
+</ol>
+<p>この3つだけです。コードが書けなくても、これができる人は現場で信頼されます。</p>
+<p>まずは練習用リポジトリで、依頼を1件、最後まで回してみてください。</p>
+<blockquote>
+<p><strong>練習用リポジトリ</strong>
+<a href="https://github.com/naogify/vibe-taskboard-practice">github.com/naogify/vibe-taskboard-practice</a>
+依頼が3件入っています。#1 から始めてください。
+動いている状態はこちら → <a href="https://vibe-taskboard-practice.pages.dev">vibe-taskboard-practice.pages.dev</a></p>
+</blockquote></main>
+<div id="zoom"><span class="hint">クリック / Esc で閉じる</span><img alt="拡大表示"></div>
+<script>
+// 画像をクリックしたら等倍で開く（細かい文字を読めるようにする）
+const zoom = document.getElementById('zoom')
+const zoomImg = zoom.querySelector('img')
+document.querySelectorAll('main img').forEach((image) => {
+  image.addEventListener('click', () => {
+    zoomImg.src = image.src
+    zoom.classList.add('on')
+    document.body.style.overflow = 'hidden'
+  })
+})
+const closeZoom = () => {
+  zoom.classList.remove('on')
+  document.body.style.overflow = ''
+}
+zoom.addEventListener('click', closeZoom)
+addEventListener('keydown', (event) => { if (event.key === 'Escape') closeZoom() })
+
+// 読み進み具合をバーで表示する
+const bar = document.getElementById('progress')
+const update = () => {
+  const max = document.documentElement.scrollHeight - innerHeight
+  bar.style.width = (max > 0 ? (scrollY / max) * 100 : 0) + '%'
+}
+addEventListener('scroll', update, { passive: true })
+addEventListener('resize', update)
+update()
+</script>
+
+</body></html>

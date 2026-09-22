@@ -1,0 +1,19 @@
+# 依存パッケージ（package-lock.json があれば再現できるのでコミットしない）
+node_modules/
+
+# ビルド成果物
+dist/
+
+# テストの出力
+playwright-report/
+test-results/
+coverage/
+
+# 環境変数（API キーが入るので絶対にコミットしない）
+.env
+.env.*
+!.env.example
+
+# OS / エディタが作るファイル
+.DS_Store
+*.log
