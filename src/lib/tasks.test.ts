@@ -4,6 +4,7 @@ import {
   createTask,
   filterTasks,
   removeTask,
+  renameTask,
   toggleTask,
   type Task,
 } from './tasks'
@@ -83,5 +84,45 @@ describe('filterTasks', () => {
 describe('countActive', () => {
   it('未完了の件数を数える', () => {
     expect(countActive([task('a', 'A'), task('b', 'B', true), task('c', 'C')])).toBe(2)
+  })
+})
+
+describe('renameTask', () => {
+  it('指定した ID のタスクのタイトルだけが変わる', () => {
+    const tasks = [task('a', 'A'), task('b', 'B')]
+    const result = renameTask(tasks, 'a', '新しいタイトル')
+
+    expect(result[0].title).toBe('新しいタイトル')
+    expect(result[1].title).toBe('B')
+  })
+
+  it('完了状態や作成日時は変わらない', () => {
+    const tasks = [task('a', 'A', true)]
+    const result = renameTask(tasks, 'a', '書き換え後')
+
+    expect(result[0]).toEqual({
+      id: 'a',
+      title: '書き換え後',
+      done: true,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    })
+  })
+
+  it('前後の空白は取り除かれる', () => {
+    const tasks = [task('a', 'A')]
+    expect(renameTask(tasks, 'a', '  整形される  ')[0].title).toBe('整形される')
+  })
+
+  it('空文字や空白だけのタイトルはエラーになる', () => {
+    // 呼び出し側はこのエラーを受け取って、元のタイトルを保つ
+    const tasks = [task('a', 'A')]
+    expect(() => renameTask(tasks, 'a', '')).toThrow('タイトルを入力してください')
+    expect(() => renameTask(tasks, 'a', '   ')).toThrow('タイトルを入力してください')
+  })
+
+  it('元の配列を書き換えない', () => {
+    const tasks = [task('a', 'A')]
+    renameTask(tasks, 'a', '新しいタイトル')
+    expect(tasks[0].title).toBe('A')
   })
 })

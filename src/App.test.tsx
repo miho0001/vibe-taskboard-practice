@@ -101,4 +101,87 @@ describe('App', () => {
     expect(saved).toHaveLength(1)
     expect(saved[0]).toMatchObject({ title: '残すタスク', done: true })
   })
+
+  describe('タイトルの編集', () => {
+    /**
+     * タスクを 1 件追加してから「編集」ボタンを押し、入力欄が出た状態にするヘルパー。
+     *
+     * @param title 追加するタスクのタイトル
+     * @returns userEvent のセッション（続けて操作するために返す）
+     */
+    async function addTaskAndStartEditing(title: string) {
+      const user = userEvent.setup()
+      render(<App />)
+
+      await user.type(screen.getByLabelText('タスク名'), title)
+      await user.click(screen.getByRole('button', { name: '追加' }))
+      await user.click(screen.getByRole('button', { name: `${title} を編集` }))
+
+      return user
+    }
+
+    it('「編集」を押すと入力欄に切り替わり、現在のタイトルが入っている', async () => {
+      await addTaskAndStartEditing('見積を作る')
+
+      expect(screen.getByLabelText('タスク名を編集')).toHaveValue('見積を作る')
+      // 入力欄に切り替わっている間は、その行の表示用の要素は出さない
+      expect(screen.queryByRole('button', { name: '見積を作る を削除' })).not.toBeInTheDocument()
+    })
+
+    it('書き換えて保存すると一覧の表示が変わり、保存もされる', async () => {
+      const user = await addTaskAndStartEditing('見積を作る')
+
+      await user.clear(screen.getByLabelText('タスク名を編集'))
+      await user.type(screen.getByLabelText('タスク名を編集'), '見積を送る')
+      await user.click(screen.getByRole('button', { name: '保存' }))
+
+      expect(screen.getByText('見積を送る')).toBeInTheDocument()
+      expect(screen.queryByText('見積を作る')).not.toBeInTheDocument()
+      // 保存後は入力欄が閉じて、通常の行に戻る
+      expect(screen.queryByLabelText('タスク名を編集')).not.toBeInTheDocument()
+      expect(loadTasks()[0]).toMatchObject({ title: '見積を送る' })
+    })
+
+    it('空文字で保存しようとするとエラーになり、元のタイトルが保たれる', async () => {
+      const user = await addTaskAndStartEditing('消えてはいけない')
+
+      await user.clear(screen.getByLabelText('タスク名を編集'))
+      await user.click(screen.getByRole('button', { name: '保存' }))
+
+      expect(screen.getByRole('alert')).toHaveTextContent('タイトルを入力してください')
+      // 入力欄は開いたままで、保存済みのタイトルも変わっていない
+      expect(screen.getByLabelText('タスク名を編集')).toBeInTheDocument()
+      expect(loadTasks()[0]).toMatchObject({ title: '消えてはいけない' })
+    })
+
+    it('編集をキャンセルすると元のタイトルのまま表示に戻る', async () => {
+      const user = await addTaskAndStartEditing('元のタイトル')
+
+      await user.clear(screen.getByLabelText('タスク名を編集'))
+      await user.type(screen.getByLabelText('タスク名を編集'), '破棄される入力')
+      await user.click(screen.getByRole('button', { name: 'キャンセル' }))
+
+      expect(screen.getByText('元のタイトル')).toBeInTheDocument()
+      expect(screen.queryByText('破棄される入力')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('タスク名を編集')).not.toBeInTheDocument()
+      expect(loadTasks()[0]).toMatchObject({ title: '元のタイトル' })
+    })
+
+    it('完了状態は編集しても変わらない', async () => {
+      const user = userEvent.setup()
+      render(<App />)
+
+      await user.type(screen.getByLabelText('タスク名'), '完了済みのタスク')
+      await user.click(screen.getByRole('button', { name: '追加' }))
+      await user.click(screen.getByRole('checkbox'))
+
+      await user.click(screen.getByRole('button', { name: '完了済みのタスク を編集' }))
+      await user.clear(screen.getByLabelText('タスク名を編集'))
+      await user.type(screen.getByLabelText('タスク名を編集'), '名前だけ変えたタスク')
+      await user.click(screen.getByRole('button', { name: '保存' }))
+
+      expect(screen.getByRole('checkbox')).toBeChecked()
+      expect(screen.getByText('未完了: 0 件')).toBeInTheDocument()
+    })
+  })
 })

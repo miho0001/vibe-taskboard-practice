@@ -102,3 +102,26 @@ export function filterTasks(tasks: Task[], filter: Filter): Task[] {
 export function countActive(tasks: Task[]): number {
   return tasks.filter((task) => !task.done).length
 }
+
+/**
+ * 指定した ID のタスクのタイトルを書き換える。
+ *
+ * 新規作成（createTask）と同じルールでバリデーションする。
+ * 元の配列は書き換えず、新しい配列を返す。
+ *
+ * @param tasks 現在のタスク一覧
+ * @param id 書き換えたいタスクの ID
+ * @param title 新しいタイトル（前後の空白は取り除く）
+ * @returns 更新後のタスク一覧
+ * @throws タイトルが空（空白のみを含む）の場合
+ */
+export function renameTask(tasks: Task[], id: string, title: string): Task[] {
+  const trimmed = title.trim()
+
+  // 空タイトルでの保存は認めない。呼び出し側で catch して元のタイトルを保つ
+  if (trimmed === '') {
+    throw new Error('タイトルを入力してください')
+  }
+
+  return tasks.map((task) => (task.id === id ? { ...task, title: trimmed } : task))
+}

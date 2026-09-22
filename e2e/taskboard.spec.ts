@@ -77,6 +77,54 @@ test.describe('タスクボード', () => {
     await expect(page.getByText('タスクがありません')).toBeVisible()
   })
 
+  test('タスクのタイトルを編集すると、リロード後も新しいタイトルのまま残る', async ({ page }) => {
+    // Given: タスクが 1 件ある
+    await page.getByLabel('タスク名').fill('現地調査の日程を決める')
+    await page.getByRole('button', { name: '追加' }).click()
+
+    // When: 「編集」を押してタイトルを書き換え、保存してからリロードする
+    await page.getByRole('button', { name: '現地調査の日程を決める を編集' }).click()
+    await page.getByLabel('タスク名を編集').fill('現地調査の日程を確定する')
+    await page.getByRole('button', { name: '保存' }).click()
+    await page.reload()
+
+    // Then: 新しいタイトルだけが残っている
+    await expect(page.getByText('現地調査の日程を確定する')).toBeVisible()
+    await expect(page.getByText('現地調査の日程を決める')).toBeHidden()
+  })
+
+  test('空のまま保存しようとするとエラーが出て、元のタイトルが保たれる', async ({ page }) => {
+    // Given: タスクを 1 件追加して編集を始めている
+    await page.getByLabel('タスク名').fill('議事録を送る')
+    await page.getByRole('button', { name: '追加' }).click()
+    await page.getByRole('button', { name: '議事録を送る を編集' }).click()
+
+    // When: 入力欄を空にして保存を押す
+    await page.getByLabel('タスク名を編集').fill('')
+    await page.getByRole('button', { name: '保存' }).click()
+
+    // Then: エラーが出て入力欄は開いたまま。キャンセルすると元のタイトルに戻る
+    await expect(page.getByRole('alert')).toHaveText('タイトルを入力してください')
+    await expect(page.getByLabel('タスク名を編集')).toBeVisible()
+    await page.getByRole('button', { name: 'キャンセル' }).click()
+    await expect(page.getByText('議事録を送る')).toBeVisible()
+  })
+
+  test('編集をキャンセルすると入力内容は捨てられる', async ({ page }) => {
+    // Given: タスクを 1 件追加して編集を始めている
+    await page.getByLabel('タスク名').fill('請求書を送る')
+    await page.getByRole('button', { name: '追加' }).click()
+    await page.getByRole('button', { name: '請求書を送る を編集' }).click()
+
+    // When: 書き換えたうえでキャンセルする
+    await page.getByLabel('タスク名を編集').fill('破棄される入力')
+    await page.getByRole('button', { name: 'キャンセル' }).click()
+
+    // Then: 元のタイトルのままで、入力内容はどこにも残らない
+    await expect(page.getByText('請求書を送る')).toBeVisible()
+    await expect(page.getByText('破棄される入力')).toBeHidden()
+  })
+
   test('保存データが壊れていても空の一覧で起動する', async ({ page }) => {
     // Given: localStorage に JSON として読めない値が入っている
     await page.evaluate(() => localStorage.setItem('vibe-taskboard:tasks', '壊れたデータ'))

@@ -108,3 +108,24 @@ button {
   color: #9aa5b1;
   text-decoration: line-through;
 }
+
+/* 編集・削除ボタンを右端にまとめる */
+.actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* 編集中の行はフォームだけを横幅いっぱいに置く */
+.edit-form {
+  display: flex;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.edit-form input {
+  flex: 1;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #cbd2d9;
+  border-radius: 6px;
+  font-size: 1rem;
+}
