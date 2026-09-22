@@ -71,6 +71,28 @@ npx playwright install chromium
 npm run dev
 ```
 
+### macOS 13（Ventura）を使っている場合
+
+手順 2 は次のエラーで失敗しますが、**そのまま進めて構いません。**
+
+```
+ERROR: Playwright does not support chromium on mac13
+```
+
+Playwright 同梱の Chromium は macOS 14 以降にしか対応していないためです。
+この場合は `npm run test:e2e` が自動でインストール済みの Google Chrome に切り替わるので、
+[Google Chrome](https://www.google.com/chrome/) だけ入っていれば E2E はそのまま動きます。
+
+使うブラウザを自分で指定したいときは、環境変数で上書きできます。
+
+```bash
+# 同梱の Chromium を明示的に使う（自動切り替えを打ち消す）
+PLAYWRIGHT_CHANNEL=chromium npm run test:e2e
+
+# Microsoft Edge で試す
+PLAYWRIGHT_CHANNEL=msedge npm run test:e2e
+```
+
 ## よく使うコマンド
 
 | コマンド | 何をするか |
@@ -79,7 +101,7 @@ npm run dev
 | `npm run typecheck` | TypeScript の型エラーを調べる |
 | `npm test` | ユニットテストを1回だけ実行する |
 | `npm run test:watch` | ファイルを保存するたびにテストを実行する |
-| `npm run test:e2e` | 本物のブラウザで E2E テストを実行する |
+| `npm run test:e2e` | 本物のブラウザで E2E テストを実行する（使うブラウザは OS で自動判定。`PLAYWRIGHT_CHANNEL` で上書き可）|
 | `npm run build` | 本番用にビルドする |
 
 ## ディレクトリ構成
@@ -93,6 +115,8 @@ src/
     tasks.test.ts  ロジックのユニットテスト
 e2e/
   taskboard.spec.ts  E2E テスト（Given/When/Then）
+playwright.browser.ts       E2E で使うブラウザを OS ごとに決めるロジック
+playwright.browser.test.ts  その判定のユニットテスト
 docs/
   spec.md          仕様書。振る舞いを変えたら必ず更新する
 CLAUDE.md          Claude Code が毎回読むプロジェクトのルール
