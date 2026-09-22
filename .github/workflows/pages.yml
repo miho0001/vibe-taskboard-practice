@@ -1,6 +1,8 @@
-# 受講生向けガイド（site/）を GitHub Pages に公開する。
+# 受講生向けガイド（site/）とタスクボード本体（Vite ビルド）を GitHub Pages に公開する。
 #
-# 公開先: https://naogify.github.io/vibe-taskboard-practice/
+# 公開先:
+#   ガイド      https://miho0001.github.io/vibe-taskboard-practice/
+#   タスクボード https://miho0001.github.io/vibe-taskboard-practice/app/
 #
 # 有効にする条件（初回だけ、リポジトリ管理者の手作業）:
 #   Settings > Pages > Build and deployment > Source を "GitHub Actions" にする
@@ -9,9 +11,15 @@ name: Deploy Pages
 on:
   push:
     branches: [main]
-    # ガイドと、このワークフロー自身を変えたときだけ動かす
+    # ガイド・アプリ本体・このワークフロー自身を変えたときだけ動かす
     paths:
       - 'site/**'
+      - 'src/**'
+      - 'index.html'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -28,7 +36,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: ガイドの公開
+    name: ガイドとアプリの公開
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -36,12 +44,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # 型エラーがあれば公開前にここで落とす（npm run build は tsc --noEmit を含む）
+      - name: アプリをビルド
+        run: npm run build
+
+      # 公開するファイルを1つのディレクトリにまとめる。
+      # ガイドはトップ、アプリは /app/ に置く（ガイドの URL を変えないため）
+      - name: 公開用ディレクトリを組み立てる
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          cp -r site/. _site/
+          mkdir -p _site/app
+          cp -r dist/. _site/app/
+
       - uses: actions/configure-pages@v5
 
-      # site/ をそのまま配信する（ビルド不要の静的 HTML）
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: _site
 
       - id: deployment
         uses: actions/deploy-pages@v4
